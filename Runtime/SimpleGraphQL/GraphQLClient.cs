@@ -154,7 +154,7 @@ namespace SimpleGraphQL
             if (!HttpUtils.IsWebSocketReady())
             {
                 // Prepare the socket before continuing.
-                await HttpUtils.WebSocketConnect(Endpoint, "graphql-ws", headers, authToken, authScheme);
+                await HttpUtils.WebSocketConnect(Endpoint, "graphql-transport-ws", headers, authToken, authScheme);
             }
 
             return await HttpUtils.WebSocketSubscribe(request.Query.ToMurmur2Hash().ToString(), request);
@@ -195,7 +195,7 @@ namespace SimpleGraphQL
             if (!HttpUtils.IsWebSocketReady())
             {
                 // Prepare the socket before continuing.
-                await HttpUtils.WebSocketConnect(Endpoint, "graphql-ws", headers, authToken, authScheme);
+                await HttpUtils.WebSocketConnect(Endpoint, "graphql-transport-ws", headers, authToken, authScheme);
             }
 
             return await HttpUtils.WebSocketSubscribe(id, request);
