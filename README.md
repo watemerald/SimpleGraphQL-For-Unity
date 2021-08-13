@@ -1,6 +1,7 @@
 # SimpleGraphQL For Unity
 
 SimpleGraphQL is just that -- a simple GraphQL client that is mostly code based and works with Unity.
+This is a fork of [LastAbyss/SimpleGraphQL-For-Unity](https://github.com/LastAbyss/SimpleGraphQL-For-Unity) with the intention to support [graphql-ws](https://github.com/enisdenjo/graphql-ws) and the [graphql-transport-ws protocol](https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md)
 
 ## About
 
@@ -25,8 +26,8 @@ That being said, this is intended to be a primarily code based package, so keep 
 ### Doesn't
 
 - Introspection (you are responsible for writing valid .graphql files)
-    - There is very basic error checking, but beyond that you need to ensure that you are writing something compatible
-      with your server (GraphiQL works great)
+  - There is very basic error checking, but beyond that you need to ensure that you are writing something compatible
+    with your server (GraphiQL works great)
 
 # Requirements
 
@@ -39,9 +40,9 @@ That being said, this is intended to be a primarily code based package, so keep 
 
 | Platforms | Queries & Mutations | Subscriptions |
 | --------- | ------------------- | ------------- |
-| Mono      | ✔                  | ✔             |
-| IL2CPP    | ✔                  | ✔             |
-| WebGL     | ✔                  | ❌            |
+| Mono      | ✔                   | ✔             |
+| IL2CPP    | ✔                   | ✔             |
+| WebGL     | ✔                   | ❌            |
 
 This should work with all platforms (Mono/IL2CPP) except for subscriptions on WebGL.
 It makes use of UnityWebRequest where possible, but C# WebSockets are the main issue, so subscriptions will not properly work. If you do not need
@@ -153,7 +154,7 @@ public async void Subscribe()
        "authToken",
        "Bearer"
     );
-    
+
     Debug.Log(success ? "Subscribed!" : "Subscribe failed!");
 }
 
@@ -192,17 +193,17 @@ private void Start()
     StartCoroutine(_CallQueryCoroutine());
 }
 
-public IEnumerator _CallQueryCoroutine() 
+public IEnumerator _CallQueryCoroutine()
 {
     yield return new WaitForSend(
         graphQL.Send(
             request
-        ), 
+        ),
         OnComplete
     );
 }
 
-public void OnComplete(string result) 
+public void OnComplete(string result)
 {
     Debug.Log("GraphQL Result: " + result);
 }
@@ -221,12 +222,12 @@ public void OnComplete(string result)
 ```graphql
 # fully defined query
 query GetScoreById($user_id: String!, $level: String!) {
-    leaderboards_by_pk(level: $level, user_id: $user_id) {
-        user_id
-        level
-        score
-        metadata
-    }
+  leaderboards_by_pk(level: $level, user_id: $user_id) {
+    user_id
+    level
+    score
+    metadata
+  }
 }
 ```
 
@@ -235,12 +236,12 @@ query GetScoreById($user_id: String!, $level: String!) {
 ```graphql
 # anonymous query
 query ($level: String!) {
-    leaderboards(where: {level: {_eq: $level}}) {
-        user_id
-        level
-        score
-        metadata
-    }
+  leaderboards(where: { level: { _eq: $level } }) {
+    user_id
+    level
+    score
+    metadata
+  }
 }
 ```
 
@@ -249,20 +250,37 @@ query ($level: String!) {
 ```graphql
 # you can have multiple queries in one file, and long as they are uniquely named
 
-mutation UpsertScore($user_id: String!, $level: String!, $score: bigint! $metadata: jsonb!) {
-    insert_leaderboards_one(object: {user_id: $user_id, level: $level, score: $score, metadata: $metadata}, on_conflict: {constraint: leaderboards_pkey, update_columns: score, where: {score: {_lt: $score}}}) {
-        user_id
-        score
+mutation UpsertScore(
+  $user_id: String!
+  $level: String!
+  $score: bigint!
+  $metadata: jsonb!
+) {
+  insert_leaderboards_one(
+    object: {
+      user_id: $user_id
+      level: $level
+      score: $score
+      metadata: $metadata
     }
+    on_conflict: {
+      constraint: leaderboards_pkey
+      update_columns: score
+      where: { score: { _lt: $score } }
+    }
+  ) {
+    user_id
+    score
+  }
 }
 
 subscription GetScoresForLevel($level: String!) {
-    leaderboards(where: {level: {_eq: $level}}) {
-        user_id
-        level
-        score
-        metadata
-    }
+  leaderboards(where: { level: { _eq: $level } }) {
+    user_id
+    level
+    score
+    metadata
+  }
 }
 ```
 

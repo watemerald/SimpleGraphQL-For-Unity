@@ -126,7 +126,7 @@ namespace SimpleGraphQL
         /// <returns></returns>
         public static async Task WebSocketConnect(
             string url,
-            string protocol = "graphql-ws",
+            string protocol = "graphql-transport-ws",
             Dictionary<string, string> headers = null,
             string authToken = null,
             string authScheme = null
@@ -208,7 +208,7 @@ namespace SimpleGraphQL
                 new
                 {
                     id,
-                    type = "start",
+                    type = "subscribe",
                     payload = new
                     {
                         query = request.Query,
@@ -247,7 +247,7 @@ namespace SimpleGraphQL
             }
 
             await _webSocket.SendAsync(
-                new ArraySegment<byte>(Encoding.UTF8.GetBytes($@"{{""type"":""stop"",""id"":""{id}""}}")),
+                new ArraySegment<byte>(Encoding.UTF8.GetBytes($@"{{""type"":""complete"",""id"":""{id}""}}")),
                 WebSocketMessageType.Text,
                 true,
                 CancellationToken.None
@@ -289,47 +289,56 @@ namespace SimpleGraphQL
                     throw new ApplicationException(e.Message);
                 }
 
-                var subType = (string) jsonObj["type"];
+                var subType = (string)jsonObj["type"];
                 switch (subType)
                 {
                     case "connection_error":
-                    {
-                        throw new WebSocketException("Connection error. Error: " + jsonResult);
-                    }
-                    case "connection_ack":
-                    {
-                        Debug.Log("Websocket connection acknowledged.");
-                        continue;
-                    }
-                    case "data":
-                    {
-                        JToken jToken = jsonObj["payload"];
-
-                        if (jToken != null)
                         {
-                            SubscriptionDataReceived?.Invoke(jToken.ToString());
+                            throw new WebSocketException("Connection error. Error: " + jsonResult);
                         }
+                    case "connection_ack":
+                        {
+                            Debug.Log("Websocket connection acknowledged.");
+                            continue;
+                        }
+                    case "next":
+                        {
+                            JToken jToken = jsonObj["payload"];
 
-                        continue;
-                    }
+                            if (jToken != null)
+                            {
+                                SubscriptionDataReceived?.Invoke(jToken.ToString());
+                            }
+
+                            continue;
+                        }
                     case "error":
-                    {
-                        throw new WebSocketException("Handshake error. Error: " + jsonResult);
-                    }
+                        {
+                            throw new WebSocketException("Handshake error. Error: " + jsonResult);
+                        }
                     case "complete":
-                    {
-                        Debug.Log("Server sent complete, it's done sending data.");
-                        break;
-                    }
+                        {
+                            Debug.Log("Server sent complete, it's done sending data.");
+                            break;
+                        }
                     case "ka":
-                    {
-                        // stayin' alive, stayin' alive
-                        continue;
-                    }
+                        {
+                            // stayin' alive, stayin' alive
+                            continue;
+                        }
                     case "subscription_fail":
-                    {
-                        throw new WebSocketException("Subscription failed. Error: " + jsonResult);
-                    }
+                        {
+                            throw new WebSocketException("Subscription failed. Error: " + jsonResult);
+                        }
+                    case "ping":
+                        {
+                            await _webSocket.SendAsync(
+                                new ArraySegment<byte>(Encoding.UTF8.GetBytes($@"{{""type"":""pong""}}")),
+                                WebSocketMessageType.Text,
+                                true,
+                                CancellationToken.None
+                            );
+                        }
                 }
 
                 break;
