@@ -338,6 +338,7 @@ namespace SimpleGraphQL
                                 true,
                                 CancellationToken.None
                             );
+                            continue;
                         }
                 }
 
